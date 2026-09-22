@@ -63,10 +63,9 @@ $('#save-draft').addEventListener('click', () => { if(!inboxDraft)return; inboxD
 document.addEventListener('click', event => { const button = event.target.closest('.delete-entry'); if (!button) return; const entry = entries.find(item => item.id === button.dataset.id); if (!entry) return; if (!confirm(`Hapus entry “${entry.title}”?`)) return; entries = entries.filter(item => item.id !== entry.id); localStorage.setItem('farrell-journal-entries', JSON.stringify(entries)); refresh(); });
 
 const supabaseClient = window.supabase.createClient(window.LIFE_JOURNAL_SUPABASE.url, window.LIFE_JOURNAL_SUPABASE.publishableKey);
-let wantsSignup = false;
 const authMessage = message => $('#auth-message').textContent = message;
 async function showSession(){ const {data:{session}} = await supabaseClient.auth.getSession(); if(session){ $('#auth-screen').hidden=true; } }
-$('#signup-button').addEventListener('click', () => { wantsSignup=!wantsSignup; $('#signup-button').textContent=wantsSignup?'Sudah punya akun? Masuk':'Belum punya akun? Daftar'; $('#auth-form button[type="submit"]').textContent=wantsSignup?'Buat akun':'Masuk'; authMessage(''); });
-$('#auth-form').addEventListener('submit', async event => { event.preventDefault(); const email=$('#auth-email').value,password=$('#auth-password').value; authMessage('Memproses…'); const result=wantsSignup ? await supabaseClient.auth.signUp({email,password}) : await supabaseClient.auth.signInWithPassword({email,password}); if(result.error){authMessage(result.error.message);return;} if(wantsSignup && !result.data.session){authMessage('Akun dibuat. Periksa email untuk konfirmasi, lalu masuk.');return;} $('#auth-screen').hidden=true; });
+$('#auth-password').closest('label').hidden=true;$('#signup-button').hidden=true;$('#auth-form button[type="submit"]').textContent='Kirim link masuk';
+$('#auth-form').addEventListener('submit', async event => { event.preventDefault(); const email=$('#auth-email').value; authMessage('Mengirim link…'); const {error}=await supabaseClient.auth.signInWithOtp({email,options:{emailRedirectTo:'https://farrelllovell.github.io/life-journal/'}}); authMessage(error?error.message:'Link masuk sudah dikirim. Periksa email Anda.'); });
 showSession();
 
