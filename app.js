@@ -67,5 +67,6 @@ const authMessage = message => $('#auth-message').textContent = message;
 async function showSession(){ const {data:{session}} = await supabaseClient.auth.getSession(); if(session){ $('#auth-screen').hidden=true; } }
 $('#auth-password').closest('label').hidden=true;$('#signup-button').hidden=true;$('#auth-form button[type="submit"]').textContent='Kirim link masuk';
 $('#auth-form').addEventListener('submit', async event => { event.preventDefault(); const email=$('#auth-email').value; authMessage('Mengirim link…'); const {error}=await supabaseClient.auth.signInWithOtp({email,options:{emailRedirectTo:'https://farrelllovell.github.io/life-journal/'}}); authMessage(error?error.message:'Link masuk sudah dikirim. Periksa email Anda.'); });
+$('#google-login').addEventListener('click', async () => { const {error}=await supabaseClient.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://farrelllovell.github.io/life-journal/'}}); if(error) authMessage(error.message); });
 showSession();
 
