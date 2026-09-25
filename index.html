@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Jurnal hidup pribadi Farrell" />
-    <title>Farrell — Life Journal</title>
+    <meta name="description" content="Jurnal pribadi yang aman dan tersinkron antar perangkat" />
+    <title>Life Journal — Jurnal pribadi</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%231b2c47'/%3E%3Cpath d='M19 16h22a5 5 0 0 1 5 5v27H24a5 5 0 0 0-5 5V16Z' fill='%2394e8cf'/%3E%3Cpath d='M25 26h15M25 34h15M25 42h10' stroke='%231b2c47' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="auth.css" />
@@ -39,7 +39,7 @@
     <div class="app-shell">
       <aside class="sidebar">
         <a class="brand" href="#dashboard"><span class="brand-mark">F</span><span>Life Journal</span></a>
-        <p class="owner">Jurnal pribadi Farrell</p>
+        <p class="owner" id="owner-label">Jurnal pribadi</p>
         <nav aria-label="Navigasi jurnal">
           <button class="nav-item active" data-view="dashboard">◫ <span>Ringkasan</span></button>
           <button class="nav-item" data-view="timeline">◷ <span>Timeline</span></button>
@@ -48,19 +48,19 @@
         </nav>
         <div class="sidebar-bottom">
           <p class="tiny-label">PERIODE AKTIF</p>
-          <strong>Agustus–September</strong>
-          <span>2026</span>
+          <strong id="active-period-label">Bulan ini</strong>
+          <span id="active-year-label"></span>
         </div>
       </aside>
 
       <main>
         <header class="topbar">
-          <div><p class="eyebrow" id="today-label">SELASA, 22 SEPTEMBER 2026</p><h1 id="view-title">Halo, Farrell.</h1></div>
+          <div><p class="eyebrow" id="today-label"></p><h1 id="view-title">Life Journal</h1><p class="cloud-status" id="cloud-status" role="status" aria-live="polite"></p></div>
           <div class="header-actions"><span id="logout-status" class="logout-status" role="status" aria-live="polite"></span><button class="ghost-button" id="logout-button" type="button" hidden>Keluar</button><button class="ghost-button" id="export-button">Ekspor JSON</button><button class="primary-button" data-open-entry>+ Catat hari ini</button></div>
         </header>
 
         <section id="dashboard-view" class="view active">
-          <div class="welcome-row"><div><h2>September dalam pandangan</h2><p>Hal-hal yang sedang Anda bangun, pelajari, dan alami.</p></div><span class="month-chip">SEPTEMBER 2026</span></div>
+          <div class="welcome-row"><div><h2 id="monthly-heading">Bulan ini dalam pandangan</h2><p>Hal-hal yang sedang Anda bangun, pelajari, dan alami.</p></div><span class="month-chip" id="month-chip"></span></div>
           <section class="metric-grid" aria-label="Ringkasan bulan">
             <article class="metric-card"><span class="metric-icon mint">↗</span><div><p>Entry tercatat</p><strong id="entry-count">0</strong><small>momen & refleksi</small></div></article>
             <article class="metric-card"><span class="metric-icon blue">◎</span><div><p>Fokus utama</p><strong id="focus-count">0</strong><small>area kehidupan</small></div></article>
@@ -68,8 +68,8 @@
             <article class="metric-card"><span class="metric-icon coral">◐</span><div><p>Pelajaran</p><strong id="lesson-count">0</strong><small>yang ingin diingat</small></div></article>
           </section>
           <section class="dashboard-grid">
-            <article class="panel summary-panel"><div class="panel-heading"><div><p class="tiny-label">RANGKUMAN BULANAN</p><h3>Jejak September</h3></div><span class="ai-chip">✦ AI-style summary</span></div><p id="monthly-summary" class="summary-copy"></p><div id="summary-themes" class="theme-list"></div></article>
-            <article class="panel goal-panel"><div class="panel-heading"><div><p class="tiny-label">GOALS & PROGRESS</p><h3>Yang sedang dikejar</h3></div><button class="text-button" data-open-entry>Tambah</button></div><div id="goal-list"></div></article>
+            <article class="panel summary-panel"><div class="panel-heading"><div><p class="tiny-label">RANGKUMAN BULANAN</p><h3 id="summary-title">Jejak bulan ini</h3></div><span class="ai-chip">DARI ENTRY ANDA</span></div><p id="monthly-summary" class="summary-copy"></p><div id="summary-themes" class="theme-list"></div></article>
+            <article class="panel goal-panel"><div class="panel-heading"><div><p class="tiny-label">GOALS & PROGRESS</p><h3>Yang sedang dikejar</h3></div><button class="text-button" id="add-goal" type="button">Tambah</button></div><div id="goal-list"></div></article>
           </section>
           <section class="insight-grid">
             <article class="panel insight-panel"><div class="panel-heading"><div><p class="tiny-label">WHAT I BUILT & EXPLORED</p><h3>Dari ide menjadi sistem</h3></div><span class="section-icon">⌘</span></div><div id="built-list" class="insight-list"></div></article>
@@ -81,14 +81,14 @@
 
         <section id="timeline-view" class="view">
           <div class="timeline-heading"><div><h2>Timeline hidup</h2><p>Kembali ke hari, bulan, dan tahun yang membentuk perjalananmu.</p></div><button class="primary-button" data-open-entry>+ Entry baru</button></div>
-          <div class="filter-row"><label>Cari <input id="search-input" type="search" placeholder="Cari kata, proyek, atau pelajaran..." /></label><label>Kategori <select id="category-filter"><option value="all">Semua kategori</option></select></label><label>Periode <select id="period-filter"><option value="all">Semua waktu</option><option value="2026-09">September 2026</option><option value="2026-08">Agustus 2026</option></select></label></div>
+          <div class="filter-row"><label>Cari <input id="search-input" type="search" placeholder="Cari kata, proyek, atau pelajaran..." /></label><label>Kategori <select id="category-filter"><option value="all">Semua kategori</option></select></label><label>Periode <select id="period-filter"><option value="all">Semua waktu</option></select></label></div>
           <div id="timeline-list" class="timeline-list"></div>
         </section>
 
         <section id="entry-view" class="view">
           <div class="compose-heading"><div><h2>Catat hari ini</h2><p>Tidak perlu sempurna. Tulis yang ingin Anda ingat.</p></div></div>
           <form id="entry-form" class="entry-form">
-            <div class="form-row"><label>Tanggal<input required id="entry-date" type="date" value="2026-09-22" /></label><label>Kategori<select id="entry-category"><option>Work & Study</option><option>Business</option><option>Personal</option><option>Health</option><option>Reflection</option></select></label></div>
+            <div class="form-row"><label>Tanggal<input required id="entry-date" type="date" /></label><label>Kategori<select id="entry-category"><option>Work & Study</option><option>Business</option><option>Personal</option><option>Health</option><option>Reflection</option></select></label></div>
             <label>Judul<input required id="entry-title" type="text" placeholder="Contoh: Mendapat akses beta TISCO Task" /></label>
             <label>Cerita hari ini<textarea required id="entry-body" rows="7" placeholder="Apa yang terjadi? Apa yang Anda pikirkan atau rasakan?"></textarea></label>
             <div class="form-row"><label>Win kecil hari ini<input id="entry-win" type="text" placeholder="Hal yang berjalan baik" /></label><label>Pelajaran<input id="entry-lesson" type="text" placeholder="Hal yang ingin diingat" /></label></div>
@@ -100,11 +100,21 @@
         <section id="inbox-view" class="view">
           <div class="compose-heading"><div><h2>AI Inbox</h2><p>Ubah percakapan yang bermakna menjadi draft jurnal yang rapi.</p></div><span class="inbox-status">● Siap untuk integrasi</span></div>
           <div class="inbox-layout">
-            <article class="panel inbox-panel"><p class="tiny-label">TANGKAP PERCAKAPAN</p><h3>Masukkan ringkasan atau transkrip</h3><p class="inbox-copy">Versi lokal ini mengolah teks yang Anda masukkan menjadi draft. Saat backend pribadi terhubung nanti, sumber percakapan yang Anda setujui dapat masuk ke inbox ini otomatis.</p><textarea id="inbox-text" rows="10" placeholder="Tempel bagian percakapan yang ingin dijadikan jurnal. Contoh: diskusi tentang Roblox UGC, AI, TISCO, atau ide bisnis."></textarea><div class="inbox-actions"><button class="primary-button" id="create-draft">✦ Buat draft jurnal</button></div></article>
+            <article class="panel inbox-panel"><p class="tiny-label">TANGKAP PERCAKAPAN</p><h3>Masukkan ringkasan atau transkrip</h3><p class="inbox-copy">Tempel bagian percakapan yang ingin Anda simpan, lalu tinjau draft sebelum memasukkannya ke jurnal.</p><textarea id="inbox-text" rows="10" placeholder="Tempel percakapan atau ringkasan yang ingin Anda ingat."></textarea><div class="inbox-actions"><button class="primary-button" id="create-draft">✦ Buat draft jurnal</button></div></article>
             <article class="panel draft-panel"><p class="tiny-label">DRAFT AI</p><div id="draft-empty" class="draft-empty"><span>✦</span><h3>Belum ada draft</h3><p>Masukkan percakapan di sebelah kiri. Website akan menyiapkan catatan yang dapat Anda koreksi sebelum disimpan.</p></div><div id="draft-result" hidden><span id="draft-category" class="category-badge"></span><h3 id="draft-title"></h3><p id="draft-body"></p><div id="draft-tags" class="tags"></div><div class="draft-fields"><label>Win<input id="draft-win" /></label><label>Lesson<input id="draft-lesson" /></label></div><div class="inbox-actions"><button class="ghost-button" id="discard-draft">Buang</button><button class="primary-button" id="save-draft">Simpan ke jurnal</button></div></div></article>
           </div>
-          <article class="panel privacy-panel"><strong>Privasi dulu.</strong><p>Website belum tersambung ke akun atau riwayat ChatGPT. Integrasi tahap berikutnya harus memakai backend pribadi dan persetujuan Anda untuk sumber percakapan yang boleh diringkas.</p></article>
+          <article class="panel privacy-panel"><strong>Privasi dulu.</strong><p>Percakapan hanya masuk ke jurnal jika Anda menempelkannya dan menyimpan draft. Website tidak membaca riwayat ChatGPT secara otomatis.</p></article>
         </section>
+
+        <dialog id="goal-dialog" class="goal-dialog">
+          <form id="goal-form">
+            <p class="tiny-label">GOALS & PROGRESS</p>
+            <h2>Tambah goal</h2>
+            <label>Nama goal<input id="goal-title" required maxlength="120" placeholder="Contoh: menyelesaikan prototipe pertama" /></label>
+            <label>Catatan<input id="goal-note" maxlength="240" placeholder="Langkah kecil atau alasan goal ini penting" /></label>
+            <div class="goal-dialog-actions"><button class="ghost-button" id="cancel-goal" type="button">Batal</button><button class="primary-button" type="submit">Simpan goal</button></div>
+          </form>
+        </dialog>
       </main>
     </div>
     <template id="entry-template"><article class="entry-card"><div class="entry-date"><strong></strong><span></span></div><div class="entry-content"><div class="entry-meta"><span class="category-badge"></span><span class="read-time"></span></div><h3></h3><p></p><div class="entry-footer"><div class="tags"></div><div class="entry-actions"><span class="entry-note"></span><button class="delete-entry" type="button" title="Hapus entry">Hapus</button></div></div></div></article></template>
