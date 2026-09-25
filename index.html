@@ -7,6 +7,7 @@
     <title>Farrell — Life Journal</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%231b2c47'/%3E%3Cpath d='M19 16h22a5 5 0 0 1 5 5v27H24a5 5 0 0 0-5 5V16Z' fill='%2394e8cf'/%3E%3Cpath d='M25 26h15M25 34h15M25 42h10' stroke='%231b2c47' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="auth.css" />
     <style>
       .insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}.section-icon{font-size:1.2rem;color:#57708f}.insight-list{margin-top:15px;display:grid;gap:11px}.insight-item{border-left:3px solid #9de7cf;padding:2px 0 2px 12px}.insight-item strong{font-size:.88rem}.insight-item p{font-size:.81rem;line-height:1.5;color:#718098;margin:4px 0 0}.gaps-panel{margin-bottom:18px}.gentle-note{font-size:.75rem;color:#718098;line-height:1.4;text-align:right}.gap-list{margin-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.gap-item{background:#f7f9fc;border-radius:10px;padding:14px}.gap-item span{font-size:.72rem;font-weight:800;color:#218a72;letter-spacing:.06em}.gap-item h4{font-size:.88rem;margin:7px 0 5px}.gap-item p{font-size:.79rem;color:#718098;line-height:1.45;margin:0}@media(max-width:900px){.insight-grid{grid-template-columns:1fr}.gap-list{grid-template-columns:1fr 1fr}}@media(max-width:560px){.gap-list{grid-template-columns:1fr}.gentle-note{text-align:left}}
     </style>
@@ -16,11 +17,24 @@
     <style>
       .entry-actions{display:flex;align-items:center;gap:11px}.delete-entry{border:0;background:transparent;color:#9a5d55;font:inherit;font-size:.74rem;font-weight:700;cursor:pointer;padding:4px 0}.delete-entry:hover{color:#b2382a;text-decoration:underline}
     </style>
-    <style>.auth-screen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:#182942}.auth-card{width:min(420px,100%);background:#fff;border-radius:20px;padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.25)}.auth-card .brand{color:#192942;margin-bottom:34px}.auth-card h1{font-size:2rem;letter-spacing:-.04em;margin:8px 0}.auth-card>p{color:#718098;line-height:1.5}.auth-card form{display:grid;gap:14px;margin-top:24px}.auth-card label{font-size:.8rem;font-weight:700;display:grid;gap:7px}.auth-card input{font:inherit;border:1px solid #dce2e9;border-radius:8px;padding:11px}.auth-card form .primary-button{width:100%;margin-top:5px}.auth-card #auth-message{font-size:.8rem;color:#b2382a;margin:0}.auth-screen[hidden]{display:none}</style>
   </head>
   <body>
     <section id="auth-screen" class="auth-screen">
-      <div class="auth-card"><div class="brand"><span class="brand-mark">F</span><span>Life Journal</span></div><p class="eyebrow">PRIVATE LIFE ARCHIVE</p><h1>Catat perjalananmu.</h1><p>Jurnal pribadi yang dapat dibuka dari mana saja.</p><form id="auth-form"><label>Email<input id="auth-email" type="email" required placeholder="nama@email.com" /></label><label>Password<input id="auth-password" type="password" required minlength="6" placeholder="Minimal 6 karakter" /></label><p id="auth-message"></p><button class="primary-button" type="submit">Masuk</button><button class="google-button" id="google-login" type="button">G&nbsp; Lanjutkan dengan Google</button><button class="text-button" id="signup-button" type="button">Belum punya akun? Daftar</button></form></div>
+      <div class="auth-card">
+        <div class="auth-brand"><span class="brand-mark">F</span><span>Life Journal</span></div>
+        <div class="auth-intro"><h1 id="auth-title">Masuk ke Life Journal</h1><p id="auth-subtitle">Lanjutkan perjalanan yang sedang Anda catat.</p></div>
+        <p class="auth-switch"><span id="auth-switch-copy">Belum punya akun?</span> <button class="auth-link" id="auth-mode-toggle" type="button">Buat akun</button></p>
+        <form id="auth-form">
+          <label id="auth-email-field">Email<input id="auth-email" type="email" required autocomplete="email" placeholder="nama@email.com" /></label>
+          <label id="auth-password-field">Kata sandi<div class="password-wrap"><input id="auth-password" type="password" required minlength="6" autocomplete="current-password" placeholder="Masukkan kata sandi" /><button class="password-visibility" id="password-visibility" type="button" aria-label="Tampilkan kata sandi" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg></button></div></label>
+          <label id="auth-confirm-field" hidden>Ulangi kata sandi<input id="auth-confirm-password" type="password" minlength="6" autocomplete="new-password" placeholder="Ulangi kata sandi" /></label>
+          <button class="auth-link auth-forgot" id="forgot-password" type="button">Lupa kata sandi?</button>
+          <p id="auth-message" aria-live="polite" role="status"></p>
+          <button class="primary-button auth-submit" id="auth-submit" type="submit">Masuk</button>
+          <div class="auth-divider" id="auth-divider"><span>atau</span></div>
+          <button class="google-button" id="google-login" type="button"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z"/></svg><span>Lanjutkan dengan Google</span></button>
+        </form>
+      </div>
     </section>
     <div class="app-shell">
       <aside class="sidebar">
