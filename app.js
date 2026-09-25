@@ -179,22 +179,46 @@ $('#google-login').addEventListener('click', async () => {
 });
 supabaseClient.auth.onAuthStateChange((event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
+    $('#logout-button').hidden = true;
     setAuthMode('recovery');
     $('#auth-screen').hidden = false;
   } else if (session && authMode !== 'recovery') {
     $('#auth-screen').hidden = true;
+    $('#logout-button').hidden = false;
   } else if (event === 'SIGNED_OUT') {
+    $('#logout-button').hidden = true;
     $('#auth-screen').hidden = false;
+    setAuthMode('signin');
+    authMessage('Anda berhasil keluar. Silakan masuk kembali.', 'success');
   }
 });
 async function showSession() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (window.location.hash.includes('type=recovery')) {
+    $('#logout-button').hidden = true;
     setAuthMode('recovery');
     $('#auth-screen').hidden = false;
   } else if (session) {
     $('#auth-screen').hidden = true;
+    $('#logout-button').hidden = false;
+  } else {
+    $('#logout-button').hidden = true;
   }
 }
 showSession();
 
+$('#logout-button').addEventListener('click', async () => {
+  const button = $('#logout-button');
+  const status = $('#logout-status');
+  button.disabled = true;
+  button.textContent = 'Keluar…';
+  status.textContent = '';
+  try {
+    const { error } = await supabaseClient.auth.signOut({ scope: 'local' });
+    if (error) throw error;
+  } catch (error) {
+    status.textContent = `Gagal keluar: ${friendlyAuthError(error)}`;
+    button.disabled = false;
+    button.textContent = 'Keluar';
+  }
+});
