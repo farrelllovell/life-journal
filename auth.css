@@ -241,3 +241,39 @@
   }
 }
 
+#logout-button[hidden] {
+  display: none !important;
+}
+
+.logout-status {
+  align-self: center;
+  color: #b2382a;
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
+#logout-button:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
+@media (max-width: 560px) {
+  .header-actions {
+    position: relative;
+    gap: 7px;
+    align-items: center;
+  }
+
+  .header-actions #logout-button:not([hidden]) {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    padding: 9px 10px;
+  }
+
+  .logout-status {
+    position: absolute;
+    top: 100%;
+    right: 0;
+  }
+}
