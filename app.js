@@ -63,10 +63,138 @@ $('#save-draft').addEventListener('click', () => { if(!inboxDraft)return; inboxD
 document.addEventListener('click', event => { const button = event.target.closest('.delete-entry'); if (!button) return; const entry = entries.find(item => item.id === button.dataset.id); if (!entry) return; if (!confirm(`Hapus entry “${entry.title}”?`)) return; entries = entries.filter(item => item.id !== entry.id); localStorage.setItem('farrell-journal-entries', JSON.stringify(entries)); refresh(); });
 
 const supabaseClient = window.supabase.createClient(window.LIFE_JOURNAL_SUPABASE.url, window.LIFE_JOURNAL_SUPABASE.publishableKey);
-const authMessage = message => $('#auth-message').textContent = message;
-async function showSession(){ const {data:{session}} = await supabaseClient.auth.getSession(); if(session){ $('#auth-screen').hidden=true; } }
-$('#auth-password').closest('label').hidden=true;$('#signup-button').hidden=true;$('#auth-form button[type="submit"]').textContent='Kirim link masuk';
-$('#auth-form').addEventListener('submit', async event => { event.preventDefault(); const email=$('#auth-email').value; authMessage('Mengirim link…'); const {error}=await supabaseClient.auth.signInWithOtp({email,options:{emailRedirectTo:'https://farrelllovell.github.io/life-journal/'}}); authMessage(error?error.message:'Link masuk sudah dikirim. Periksa email Anda.'); });
-$('#google-login').addEventListener('click', async () => { const {error}=await supabaseClient.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://farrelllovell.github.io/life-journal/'}}); if(error) authMessage(error.message); });
+const AUTH_REDIRECT = 'https://farrelllovell.github.io/life-journal/';
+let authMode = 'signin';
+const authMessage = (message, kind = 'info') => {
+  const target = $('#auth-message');
+  target.textContent = message;
+  target.dataset.kind = kind;
+};
+const setAuthMode = mode => {
+  authMode = mode;
+  const signup = mode === 'signup';
+  const forgot = mode === 'forgot';
+  const recovery = mode === 'recovery';
+  const needsPassword = !forgot;
+  const needsConfirmation = signup || recovery;
+  $('#auth-title').textContent = signup ? 'Buat akun Life Journal' : forgot ? 'Lupa kata sandi?' : recovery ? 'Buat kata sandi baru' : 'Masuk ke Life Journal';
+  $('#auth-subtitle').textContent = signup ? 'Mulai simpan cerita dan progress-mu.' : forgot ? 'Kami akan mengirim tautan untuk mengatur ulang kata sandi.' : recovery ? 'Gunakan kata sandi baru untuk akun Anda.' : 'Lanjutkan perjalanan yang sedang Anda catat.';
+  $('.auth-switch').hidden = recovery;
+  $('#auth-switch-copy').textContent = signup ? 'Sudah punya akun?' : forgot ? 'Ingat kata sandi?' : 'Belum punya akun?';
+  $('#auth-mode-toggle').textContent = signup || forgot ? 'Masuk' : 'Buat akun';
+  $('#auth-email-field').hidden = recovery;
+  $('#auth-email').required = !recovery;
+  $('#auth-password-field').hidden = !needsPassword;
+  $('#auth-password').required = needsPassword;
+  $('#auth-password').autocomplete = signup || recovery ? 'new-password' : 'current-password';
+  $('#auth-confirm-field').hidden = !needsConfirmation;
+  $('#auth-confirm-password').required = needsConfirmation;
+  $('#forgot-password').hidden = mode !== 'signin';
+  $('#auth-divider').hidden = forgot || recovery;
+  $('#google-login').hidden = forgot || recovery;
+  $('#auth-submit').textContent = signup ? 'Buat akun' : forgot ? 'Kirim link reset' : recovery ? 'Simpan kata sandi' : 'Masuk';
+  authMessage('');
+};
+const setAuthBusy = busy => {
+  $('#auth-submit').disabled = busy;
+  $('#google-login').disabled = busy;
+  $('#auth-mode-toggle').disabled = busy;
+  $('#forgot-password').disabled = busy;
+};
+const friendlyAuthError = error => {
+  const message = (error?.message || '').toLowerCase();
+  if (message.includes('invalid login credentials')) return 'Email atau kata sandi belum cocok. Periksa kembali, atau buat akun baru.';
+  if (message.includes('email not confirmed')) return 'Silakan verifikasi email Anda dari tautan yang kami kirim.';
+  if (message.includes('password should be at least')) return 'Kata sandi terlalu pendek. Gunakan minimal 6 karakter.';
+  return error?.message || 'Terjadi kendala. Coba lagi sebentar.';
+};
+
+$('#auth-mode-toggle').addEventListener('click', () => {
+  setAuthMode(authMode === 'signup' || authMode === 'forgot' ? 'signin' : 'signup');
+  $('#auth-password').value = '';
+  $('#auth-confirm-password').value = '';
+});
+$('#forgot-password').addEventListener('click', () => {
+  setAuthMode('forgot');
+  $('#auth-email').focus();
+});
+$('#password-visibility').addEventListener('click', event => {
+  const input = $('#auth-password');
+  const visible = input.type === 'password';
+  input.type = visible ? 'text' : 'password';
+  event.currentTarget.setAttribute('aria-pressed', String(visible));
+  event.currentTarget.setAttribute('aria-label', visible ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+});
+
+$('#auth-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const email = $('#auth-email').value.trim();
+  const password = $('#auth-password').value;
+  const confirmation = $('#auth-confirm-password').value;
+  if ((authMode === 'signup' || authMode === 'recovery') && password !== confirmation) {
+    authMessage('Kata sandi yang Anda masukkan belum sama.', 'error');
+    $('#auth-confirm-password').focus();
+    return;
+  }
+  setAuthBusy(true);
+  authMessage(authMode === 'signin' ? 'Sedang masuk…' : authMode === 'signup' ? 'Membuat akun…' : authMode === 'forgot' ? 'Mengirim tautan…' : 'Memperbarui kata sandi…');
+  try {
+    if (authMode === 'signin') {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      authMessage('Berhasil masuk.', 'success');
+    } else if (authMode === 'signup') {
+      const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: AUTH_REDIRECT } });
+      if (error) throw error;
+      if (data.session) {
+        $('#auth-screen').hidden = true;
+      } else {
+        setAuthMode('signin');
+        authMessage('Akun berhasil dibuat. Periksa email untuk verifikasi sebelum masuk.', 'success');
+      }
+    } else if (authMode === 'forgot') {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: AUTH_REDIRECT });
+      if (error) throw error;
+      authMessage('Jika email tersebut terdaftar, tautan reset akan dikirim. Periksa inbox dan folder spam.', 'success');
+    } else {
+      const { error } = await supabaseClient.auth.updateUser({ password });
+      if (error) throw error;
+      await supabaseClient.auth.signOut({ scope: 'local' });
+      setAuthMode('signin');
+      $('#auth-password').value = '';
+      $('#auth-confirm-password').value = '';
+      authMessage('Kata sandi diperbarui. Silakan masuk dengan kata sandi baru.', 'success');
+    }
+  } catch (error) {
+    authMessage(friendlyAuthError(error), 'error');
+  } finally {
+    setAuthBusy(false);
+  }
+});
+$('#google-login').addEventListener('click', async () => {
+  setAuthBusy(true);
+  const { error } = await supabaseClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: AUTH_REDIRECT } });
+  if (error) authMessage(friendlyAuthError(error), 'error');
+  setAuthBusy(false);
+});
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    setAuthMode('recovery');
+    $('#auth-screen').hidden = false;
+  } else if (session && authMode !== 'recovery') {
+    $('#auth-screen').hidden = true;
+  } else if (event === 'SIGNED_OUT') {
+    $('#auth-screen').hidden = false;
+  }
+});
+async function showSession() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (window.location.hash.includes('type=recovery')) {
+    setAuthMode('recovery');
+    $('#auth-screen').hidden = false;
+  } else if (session) {
+    $('#auth-screen').hidden = true;
+  }
+}
 showSession();
 
